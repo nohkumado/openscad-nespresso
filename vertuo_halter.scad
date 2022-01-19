@@ -1,17 +1,12 @@
-wd= 2;
-typ = "vertuo_diavolito";
+wd= 3;
+typ = "vertuo_diavolito";// ["vertuo_diavolito"), "vertuo_colombia")]
+//typ = "vertuo_colombia";
 
 //halter(typ= typ, wd=wd, flat=true);
+halter2(typ= typ, wd=wd, flat=true);
 //translate([70,0,0]) halter(typ= "vertuo_colombia", wd=wd, flat=true);
 //schachtel(typ=typ, xcenter = false, wd= wd, renfort=true);
 //schachtel(typ=typ, xcenter = true, wd= wd, renfort=false);
-
-difference()
-{
-  schachtel(typ=typ, xcenter = true, wd= wd, renfort=true, h=50);
-  color("red")
-    translate([90,0,wd]) schachtel(typ=typ, xcenter = true, wd= 0, renfort=false);
-}
 
 //translate([70,0,0]) schachtel(typ="vertuo_colombia", center = false, xcenter = true);
 function nespresso_formats(typ = "regular")=
@@ -23,7 +18,7 @@ function nespresso_formats(typ = "regular")=
 module halter(typ= typ, wd=wd, h=50, flat= false)
 {
   grundf = nespresso_formats(typ);
-  translate([0,(flat)?grundf[1]/2+wd:0,0])
+  translate([0,(flat)?(grundf[1]+wd)/2:0,0])
     difference()
     {
       schachtel(typ=typ, xcenter = true, wd= wd, h=h, renfort=true);
@@ -34,19 +29,43 @@ module halter(typ= typ, wd=wd, h=50, flat= false)
 	  //translate([0,-grundf[1]/2,wd]) cube([grundf[0]-2*wd,2*wd,grundf[1]-2*wd], center = true);
 	}
     }
-  //color("red")
-  //  translate([0,grundf[1]/2,h-0.1+5])
-  //  {
-  //    difference()
-  //    {
-  //      cube([grundf[0]+1*wd, wd, 10], center = true);
-  //      union()
-  //      {
-  //        translate([-grundf[0]/2+10,0,0]) rotate([90,0,0]) cylinder(d=5, h=4*wd, center = true, $fn=20);
-  //        translate([grundf[0]/2-10,0,0]) rotate([90,0,0]) cylinder(d=5, h=4*wd, center = true, $fn=20);
-  //      }
-  //    }
-  //  }
+}
+module halter2(typ= typ, wd=wd, h=50, flat= false)
+{
+  grundf = nespresso_formats(typ);
+  zsiz = grundf[1]-22+wd;
+  translate([0,(flat)?(grundf[1]+wd)/2:0,0])
+  {
+    difference()
+    {
+      union()
+      {
+	schachtel(typ=typ, xcenter = true, wd= wd, h=h, renfort=false);
+	color("red")
+	  translate([-wd,-22+1.8*wd,-zsiz])
+	  cube([2*wd,(grundf[1]+wd)-22*sin(45),zsiz], center = false);
+      }
+      translate([0,0,wd])
+	union()
+	{
+	  schachtel(typ=typ, xcenter = true );
+	  //translate([0,-grundf[1]/2,wd]) 
+	  translate([0,-grundf[1]/2-wd,wd]) 
+	   color("red") aussparung(grundf, wd);
+	}
+    }
+	  translate([0,-grundf[1]/2-wd/2,1.5*wd]) 
+	   color("red") aussparung(grundf=[grundf[0]-2*wd, grundf[1]-2*wd], wd=wd/2, frad=20-wd);
+  }
+	//color("red") aussparung(grundf, wd);
+}
+
+module aussparung(grundf,wd, frad= 20)
+{
+  zsiz = grundf[1]-22*cos(45);
+  translate([0,wd,wd-(zsiz-11)/2-wd/2+5]) cube([grundf[0]-2*wd,2*wd,(zsiz-11)-wd+10], center = true);
+  translate([0,wd,4.9+frad/2]) cube([frad,2*wd,frad], center = true);
+  translate([0,wd,4.9+frad]) rotate([90,0,0])cylinder(d= frad, h= 2*wd, center = true);
 }
 
 function addRenfort(renfort, alist)= (!renfort)?  concat([each(alist)],[[9,8,7,6]]):
