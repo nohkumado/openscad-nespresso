@@ -1,12 +1,15 @@
 wd= 3;
+height= 50;
 typ = "vertuo_diavolito";// ["vertuo_diavolito"), "vertuo_colombia")]
 //typ = "vertuo_colombia";
 
-//halter(typ= typ, wd=wd, flat=true);
-halter2(typ= typ, wd=wd, flat=true);
-//translate([70,0,0]) halter(typ= "vertuo_colombia", wd=wd, flat=true);
+//halter(typ= typ,h=height, wd=wd, flat=true);
+//halter2(typ= typ,h=height, wd=wd, flat=true);
+halter3(typ= typ,h=height, wd=wd, flat=true);
+//translate([70,0,0]) halter(typ= "vertuo_colombia",h=height, wd=wd, flat=true);
 //schachtel(typ=typ, xcenter = false, wd= wd, renfort=true);
 //schachtel(typ=typ, xcenter = true, wd= wd, renfort=false);
+//schachtel2D(typ=typ, xcenter = true, wd= wd,h=height, renfort=true);
 
 //translate([70,0,0]) schachtel(typ="vertuo_colombia", center = false, xcenter = true);
 function nespresso_formats(typ = "regular")=
@@ -19,14 +22,19 @@ module halter(typ= typ, wd=wd, h=50, flat= false)
 {
   grundf = nespresso_formats(typ);
   translate([0,(flat)?(grundf[1]+wd)/2:0,0])
-    difference()
+    //difference()
     {
-      schachtel(typ=typ, xcenter = true, wd= wd, h=h, renfort=true);
+      union()
+      {
+	%schachtel(typ=typ, xcenter = true, wd= wd, h=h, renfort=true);
+      }
       translate([0,0,wd])
 	union()
 	{
 	  schachtel(typ=typ, xcenter = true );
 	  //translate([0,-grundf[1]/2,wd]) cube([grundf[0]-2*wd,2*wd,grundf[1]-2*wd], center = true);
+	  translate([0,-grundf[1]/2-wd,wd]) 
+	   color("red") aussparung(grundf, wd);
 	}
     }
 }
@@ -59,6 +67,32 @@ module halter2(typ= typ, wd=wd, h=50, flat= false)
   }
 	//color("red") aussparung(grundf, wd);
 }
+module halter3(typ= typ, wd=wd, h=50, flat= false)
+{
+  grundf = nespresso_formats(typ);
+  zoom = [
+    (wd != 0)?(grundf[0]+2*wd)/grundf[0]:1,
+    (wd != 0)?(grundf[1]+2*wd)/grundf[1]:1,
+    (wd != 0)?(h+2*wd)/h:1,
+  ];
+  translate([0,(flat)?(grundf[1]+wd)/2:0,0])
+    difference()
+    {
+      union()
+      {
+	scale(zoom)
+	schachtel2D(typ=typ, xcenter = true, wd= wd, h=h, renfort=true);
+      }
+      translate([0,0,2*wd])
+	union()
+	{
+	  schachtel2D(typ=typ, xcenter = true );
+	  //translate([0,-grundf[1]/2,wd]) cube([grundf[0]-2*wd,2*wd,grundf[1]-2*wd], center = true);
+	  translate([0,-.1,wd+grundf[1]-22*cos(45)]) 
+	   color("red") aussparung(grundf, wd);
+	}
+    }
+}
 
 module aussparung(grundf,wd, frad= 20)
 {
@@ -78,7 +112,7 @@ concat([each(alist)],[
     [14,17,16,13]//bottom
     ]
     );
-    module schachtel(typ="vertuo", center = false, xcenter = false, wd= 0, h = 275, renfort=false)
+module schachtel(typ="vertuo", center = false, xcenter = false, wd= 0, h = 275, renfort=false)
 {
   grundf = [ nespresso_formats(typ)[0]+wd,nespresso_formats(typ)[1]+wd];
   x0 = (xcenter||center)? -grundf[0]/2:0;
@@ -148,4 +182,44 @@ concat([each(alist)],[
     //  (renfort)?[14,17,16,13]:[],//bottom
     //  //(renfort)?[15,12,14,17]:[],//bottom
     polyhedron(points, addRenfort(renfort,faces));
+}
+module schachtel2D(typ="vertuo", center = false, xcenter = false, wd= 0, h = 275, renfort=false)
+{
+  grundf = [ nespresso_formats(typ)[0],nespresso_formats(typ)[1]];
+  lh = sqrt(2*22^2);
+  x0 = (xcenter||center)? 0:grundf[0]/2;
+  y0 = (xcenter||center)? 0:grundf[1]/2;
+  z0 = (center)? 0:h/2+grundf[1]-22*cos(45);
+
+  translate([x0,y0,z0])
+  rotate([0,90,0])
+    translate([-h/2,-grundf[1]+wd,-grundf[0]/2])
+  union()
+  {
+    points = 
+      [
+      [0,0],//0
+      [h,0],//1
+      [h+grundf[1]-(22*cos(45)),grundf[1]-(22*sin(45))],//2
+      [h+grundf[1]-lh,grundf[1]],//3
+      [h,grundf[1]],//1
+      [0,grundf[1]],//4
+      ];
+
+    linear_extrude(height=grundf[0])
+      polygon(points);
+
+    if(renfort)
+    {
+      pointsR = 
+	[
+	[h,0],//1
+	[h+grundf[1]-22*cos(45),grundf[1]-22*sin(45)],//2
+	[h+grundf[1]-22*cos(45),0],//3
+	];
+      translate([0,0,grundf[0]/2])
+	linear_extrude(height=2*wd, center= true)
+	polygon(pointsR);
+    }
+  }
 }
